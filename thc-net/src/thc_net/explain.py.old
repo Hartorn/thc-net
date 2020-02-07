@@ -1,0 +1,139 @@
+# from sklearn.cluster import MiniBatchKMeans
+# from shap import KernelExplainer, DeepExplainer
+# from sklearn.inspection import permutation_importance
+# from sklearn.utils import resample
+
+
+        # Synthetising data for local explain
+        # mbkmeans = MiniBatchKMeans(n_clusters=20, verbose=0,tol=1e-4)
+        # mbkmeans.fit(X)
+        # self.kmeans_ = mbkmeans.cluster_centers_
+
+        # self.explain_global(X, y, **self.get_global_params(X, y))
+        # gc.collect()
+        # gc.collect()
+
+
+    # def explain_local(self, data, l1_reg="num_features(10)", nsamples=50):
+    #     """
+    #     Explain why the model infer the results, using Kernel Explainer from SHAP.
+
+    #     Parameters
+    #     ----------
+    #     data : numpy matrice
+    #         data to explain
+    #     l1_reg : str, optional
+    #         options for kernel explainer, by default "num_features(10)"
+    #     nsamples : int, optional
+    #         number of sample to estimate, by default 50
+
+    #     Returns
+    #     -------
+    #     numpy matrices
+    #         local feature contribution for each result
+    #     """
+
+    #     def predict_func(X):
+    #         return self.predict_proba(X)
+
+    #     k_explain = DeepExplainer(predict_func, self.kmeans_)#, keep_index=False)
+    #     return np.stack(k_explain.shap_values(data))#, l1_reg=l1_reg, nsamples=nsamples))
+
+    # def get_global_params(self, X, y):
+    #     """
+    #     Method to override for classifier or regressor.
+
+    #     Parameters
+    #     ----------
+    #     X : numpy matrice
+    #         training data
+    #     y : numpy array
+    #         training data
+
+    #     Returns
+    #     -------
+    #     dict
+    #         dictionary, containing scoring method for estimator,
+    #         if should be stratified sample, ...
+    #     """
+    #     return {}
+
+    # def explain_global(
+    #     self, X, y, scoring, n_repeats=5, n_samples=10000, stratify=None
+    # ):
+    #     """
+    #     Method computing global feature importances
+
+    #     Parameters
+    #     ----------
+    #     X : numpy matrice
+    #         Training data
+    #     y : numpy array
+    #         target for training
+    #     scoring : str or function
+    #         Scikit learn scoring functinos
+    #     n_repeats : int, optional
+    #         nb repeats for permutation importance, by default 5
+    #     n_samples : int, optional
+    #         np of sample to use, by default 10000
+    #     stratify : numpy array, optional
+    #         array to stratify on, by default None
+
+    #     Returns
+    #     -------
+    #     numpy array
+    #         global feature importance
+    #     """
+    #     if self.feature_importances is None:
+    #         self.feature_importances = permutation_importance(
+    #             self,
+    #             *resample(
+    #                 X,
+    #                 y,
+    #                 replace=False,
+    #                 stratify=stratify,
+    #                 random_state=SEED,
+    #                 n_samples=min(X.shape[0], n_samples),
+    #             ),
+    #             scoring=scoring,
+    #             n_repeats=n_repeats,
+    #             n_jobs=1,
+    #             random_state=SEED,
+    #         ).importances_mean
+
+    #     return self.feature_importances
+
+    # def get_global_params(self, X, y):
+    #     return {
+    #         "scoring": "roc_auc" if self.out_dim == 2 else "accuracy",
+    #         "stratify": y,
+    #     }
+
+# from sklearn.inspection import permutation_importance
+# from sklearn.utils import resample
+# from shap import KernelExplainer
+
+
+
+# def explain_global(model, X, y, scoring, n_repeats=5, n_samples=10000, stratify=None):
+#     return permutation_importance(
+#         model,
+#         *resample(
+#             X,
+#             y,
+#             replace=True,
+#             stratify=stratify,
+#             random_state=SEED,
+#             n_samples=n_samples,
+#         ),
+#         scoring=scoring,
+#         n_repeats=n_repeats,
+#         n_jobs=1,
+#         random_state=SEED,
+#     ).importances_mean
+
+
+    # def get_global_params(self, X, y):
+    #     return {
+    #         "scoring": "neg_mean_squared_error",
+    #     }

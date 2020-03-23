@@ -18,13 +18,12 @@ git clone -q git@github.com:Hartorn/thc-net.git thc-net
 cd thc-net
 # Create release branch and push it
 git checkout -b release/${version}
-
 # Change version of package
-docker run --rm -v ${PWD}:/work -w /work thc-net:latest poetry version ${version}
+docker run --rm -v ${PWD}/thc-net:/work -w /work thc-net:latest poetry version ${version}
 # Add modified file
-git add pyproject.toml
+git add **/pyproject.toml
 # Commit release
-git commit -m "chore: release v${version}"
+git commit -m "chore: release v${version}" --allow-empty
 # Create tag for changelog generation
 git tag v${version}
 docker run -v ${PWD}:/work -w /work --entrypoint "" release-changelog:latest conventional-changelog -p angular -i CHANGELOG.md -s -r 0
@@ -34,7 +33,7 @@ echo "$(tail -n +4 CHANGELOG.md)" > CHANGELOG.md
 # Deleting tag 
 git tag -d v${version}
 # Adding CHANGELOG to commit
-git add CHANGELOG.md
+git add ${PWD}/CHANGELOG.md
 git commit --amend --no-edit
 # Push release branch
 git push origin release/${version}

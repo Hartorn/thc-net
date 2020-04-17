@@ -1,4 +1,4 @@
-FROM python:3.7-slim-buster@sha256:dc7110e9b6da8c75b703d17ff4d276ae65d7e3d21ab24847779cb442130710e1
+FROM python:3.8-slim-buster@sha256:f8654718792e0553b3c0cacf83a95e7997ef6c56cf6d1dc2a7645f97da0a2020
 RUN apt update && apt install curl make git libopenblas-base libgomp1 graphviz gcc g++ -y
 RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
 ENV SHELL /bin/bash -l

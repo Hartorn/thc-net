@@ -12,6 +12,7 @@ from tensorflow.keras.layers import (
     Reshape,
     Concatenate,
     Dense,
+    Embedding,
 )
 from tensorflow_addons.activations import mish
 from tensorflow_addons.optimizers import RectifiedAdam, Lookahead
@@ -74,7 +75,7 @@ def build_model(
     input_cat_dim = len(params["cat_cols"])
     input_bool_dim = len(params["bool_cols"])
     input_num_dim = len(params["num_cols"])
-    nb_channels = params["nb_channels"]
+    # nb_channels = params["nb_channels"]
 
     # Inputs of the model
     inputs = []
@@ -89,12 +90,17 @@ def build_model(
 
     # Handling numeric
     if input_num_dim > 0:
-        input_num_layer = Input(shape=(input_num_dim,), name="input_num")
+        input_num_layer = Input(shape=(input_num_dim * 3,), name="input_num")
         inputs.append(input_num_layer)
         x_num_layer = input_num_layer
 
         if len(lconv_num_dim) != 0 and input_num_dim > 0:
-            x_num_layer = Reshape((input_num_dim, 1), name="reshape_num_input")(
+            # x_num_layer = Reshape((input_num_dim, 1), name="reshape_num_input")(
+            #     x_num_layer
+            # )
+            # print(input_num_dim)
+            # print(int(input_num_dim/2))
+            x_num_layer = Reshape((input_num_dim, 3), name="reshape_num_input")(
                 x_num_layer
             )
 
@@ -104,7 +110,7 @@ def build_model(
             "block_num",
             activation,
             use_bn=False,
-            activation_first_layer="tanh",
+            activation_first_layer=None,  # "tanh",
             options=None,
         )
 
@@ -117,16 +123,26 @@ def build_model(
     # Handling cat
     if input_cat_dim > 0:
 
-        input_cat_layer = Input(shape=(input_cat_dim, nb_channels), name="input_cat")
+        input_cat_layer = Input(shape=(input_cat_dim,), name="input_cat")
         inputs.append(input_cat_layer)
 
-        x_layer = input_cat_layer
+        x_layer = Embedding(
+            params["max_nb"] + 1,
+            16, #int(min(np.log2(params["max_nb"] + 1), 50)),
+            #int(min((params["max_nb"] + 1) / 2, 50)),
+            name="large_emb",
+        )(input_cat_layer)
+        # x_layer = Reshape((input_num_dim, 1), name="reshape_cat_input")(
+        #     input_cat_layer
+        # )
+
+        # x_layer = input_cat_layer
         x_layer = add_local_conv_block(
             x_layer,
             lconv_dim,
             "block_cat",
             activation,
-            use_bn=True,
+            use_bn=False,
             activation_first_layer=None,
             options=None,
         )
@@ -174,21 +190,16 @@ def predict(model, input_model):
         if isinstance(input_shape, list):
             input_shape = input_shape[0]
 
-        nb_channel = (
-            input_shape[-1]
-            if len(input_shape) > 2
-            else 1
-        )
-        nb_features = (
-            input_shape[-2]
-            if len(input_shape) > 2
-            else input_shape[-1]
-        )
+        nb_channel = input_shape[-1] if len(input_shape) > 2 else 1
+        nb_features = input_shape[-2] if len(input_shape) > 2 else input_shape[-1]
         nb_weights = nb_channel * nb_features
-        weights.append(log_reg_weights[consumed : consumed + nb_weights].reshape(nb_features, nb_channel))
+        weights.append(
+            log_reg_weights[consumed : consumed + nb_weights].reshape(
+                nb_features, nb_channel
+            )
+        )
         shapes.append((nb_features, nb_channel))
         consumed += nb_weights
-
 
     explainable_model = Model(inputs=[model.input], outputs=[model.output, *outputs],)
 
@@ -196,19 +207,25 @@ def predict(model, input_model):
     probas = predictions[0]
     aggregated_explanation = []
 
-    for weight_slice, shape_feat, raw_explanation in zip(weights, shapes, predictions[1:]):
+    for weight_slice, shape_feat, raw_explanation in zip(
+        weights, shapes, predictions[1:]
+    ):
         reshaped_expl = raw_explanation.reshape(-1, shape_feat[0], shape_feat[1])
         reshaped_weights = weight_slice.reshape(1, *weight_slice.shape)
-        feature_explanation = (reshaped_expl * reshaped_weights).sum(axis=-1).reshape(-1, shape_feat[0])
+        feature_explanation = (
+            (reshaped_expl * reshaped_weights).sum(axis=-1).reshape(-1, shape_feat[0])
+        )
         aggregated_explanation.append(feature_explanation)
 
     aggregated_explanation = np.hstack(aggregated_explanation)
-    
+
     results = np.zeros(aggregated_explanation.shape)
     for idx in range(aggregated_explanation.shape[1]):
         expla_cpy = np.copy(aggregated_explanation)
         expla_cpy[:, idx] = 0
-        results[:, idx] = probas.reshape(-1) - sigmoid(expla_cpy.sum(axis=-1) + log_reg_bias).numpy().reshape(-1)
+        results[:, idx] = probas.reshape(-1) - sigmoid(
+            expla_cpy.sum(axis=-1) + log_reg_bias
+        ).numpy().reshape(-1)
 
     return probas, results
 
@@ -235,21 +252,16 @@ def encode(model, input_model):
         if isinstance(input_shape, list):
             input_shape = input_shape[0]
 
-        nb_channel = (
-            input_shape[-1]
-            if len(input_shape) > 2
-            else 1
-        )
-        nb_features = (
-            input_shape[-2]
-            if len(input_shape) > 2
-            else input_shape[-1]
-        )
+        nb_channel = input_shape[-1] if len(input_shape) > 2 else 1
+        nb_features = input_shape[-2] if len(input_shape) > 2 else input_shape[-1]
         nb_weights = nb_channel * nb_features
-        weights.append(log_reg_weights[consumed : consumed + nb_weights].reshape(nb_features, nb_channel))
+        weights.append(
+            log_reg_weights[consumed : consumed + nb_weights].reshape(
+                nb_features, nb_channel
+            )
+        )
         shapes.append((nb_features, nb_channel))
         consumed += nb_weights
-
 
     explainable_model = Model(inputs=[model.input], outputs=[model.output, *outputs],)
 
@@ -258,7 +270,9 @@ def encode(model, input_model):
     aggregated_explanation = []
 
     for shape_feat, raw_explanation in zip(shapes, predictions[1:]):
-        aggregated_explanation.append(raw_explanation.reshape(-1, shape_feat[0] * shape_feat[1]))
+        aggregated_explanation.append(
+            raw_explanation.reshape(-1, shape_feat[0] * shape_feat[1])
+        )
 
     aggregated_explanation = np.hstack(aggregated_explanation)
 

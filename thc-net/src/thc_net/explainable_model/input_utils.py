@@ -3,7 +3,9 @@ from itertools import repeat
 from concurrent.futures import ProcessPoolExecutor as PoolExecutor
 
 from thc_net.safe_label_encoder import SafeLabelEncoder
-from sklearn.impute import SimpleImputer
+from sklearn.impute import SimpleImputer, MissingIndicator
+from sklearn.preprocessing import QuantileTransformer, KBinsDiscretizer, StandardScaler
+from sklearn.pipeline import Pipeline, FeatureUnion
 
 
 def word_to_np_array(word, cut_length):
@@ -66,7 +68,7 @@ def preproc_dataset(train_df, target=None, ids=None, params=None):
         num_cols = list(
             set(
                 train_df.columns[
-                    (n_unique > 2) & (train_df.dtypes != "object")
+                    (n_unique > 2) & ((n_unique / train_df.shape[0]) >  0.05) & (train_df.dtypes != "object")
                 ].tolist()
             )
             - set(to_ignore)
@@ -76,15 +78,18 @@ def preproc_dataset(train_df, target=None, ids=None, params=None):
     if "cat_cols" not in params:
         cat_cols = list(
             set(train_df.columns.tolist())
-            - set(num_cols)
-            - set(bool_cols)
-            - set(constant_cols)
+            - set(params["num_cols"])
+            - set(params["bool_cols"])
+            - set(params["constant_cols"])
             - set(to_ignore)
         )
         params["cat_cols"] = cat_cols
 
     # Let's handle numeric columns
-    X_num_values = train_df[params["num_cols"]].values
+    input_num_values = train_df[params["num_cols"]].values
+    X_num_values = np.zeros(
+        (input_num_values.shape[0], 3 * input_num_values.shape[1]), dtype="float"
+    )
 
     if "num_encoder" not in params:
         #  Let's calculate fillna for num columns
@@ -93,13 +98,57 @@ def preproc_dataset(train_df, target=None, ids=None, params=None):
         )
         params["num_encoder"] = []
         for i in range(len(params["num_cols"])):
-            enc = SimpleImputer(strategy="constant", fill_value=fillna_values[i])
-            enc.fit(X_num_values[:, i].reshape(-1, 1))
+            enc = FeatureUnion(
+                [
+                    (
+                        # "fillna",
+                        # SimpleImputer(strategy="constant", fill_value=fillna_values[i]),
+                        "fillna",
+                        Pipeline(
+                            [
+                                (
+                                    "fillna",
+                                    SimpleImputer(
+                                        strategy="constant", fill_value=fillna_values[i]
+                                    ),
+                                ),
+                                # ("scaler", StandardScaler()),
+                            ]
+                        ),
+                    ),
+                    ("indicator", MissingIndicator(features="all")),
+                    (
+                        "quantile",
+                        Pipeline(
+                            [
+                                ("fillna", SimpleImputer(strategy="median"),),
+                                ("quantile", QuantileTransformer()),
+                            ]
+                        ),
+                    ),
+                    # (
+                    #     "bins",
+                    #     Pipeline(
+                    #         [
+                    #             ("fillna", SimpleImputer(strategy="median"),),
+                    #             ("bins", KBinsDiscretizer(25, encode="ordinal")),
+                    #             ("scaler", StandardScaler()),
+                    #         ]
+                    #     ),
+                    # ),
+                ]
+            )
+            enc.fit(input_num_values[:, i].reshape(-1, 1))
+            # enc_list.append(enc)
+
             params["num_encoder"].append(enc)
 
     for i, enc in enumerate(params["num_encoder"]):
-        X_num_values[:, i] = (
-            enc.transform(X_num_values[:, i].reshape(-1, 1)).reshape(-1).astype("float")
+        # print(enc.transform(input_num_values[:, i].reshape(-1, 1)).reshape(-1, 4).shape)
+        X_num_values[:, 3 * i : 3 * (i + 1)] = (
+            enc.transform(input_num_values[:, i].reshape(-1, 1))
+            .reshape(-1, 3)
+            .astype("float")
         )
 
     # Let's handle boolean columns
@@ -117,17 +166,44 @@ def preproc_dataset(train_df, target=None, ids=None, params=None):
             enc.transform(X_bool_values[:, i].reshape(-1)).reshape(-1).astype("uint")
         )
 
-    #  For cat cols, let's strip spaces
-    X_cat_values = np.char.strip(train_df[params["cat_cols"]].values.astype("str"))
-    # Now, let's calculate the number of "channels" needed (max string length)
-    if "nb_channels" not in params and len(cat_cols) > 0:
-        params["nb_channels"] = np.vectorize(len)(X_cat_values).max()
-    elif "nb_channels" not in params:
-        params["nb_channels"] = 0
-    # Finally, let's transform it into 1d array
-    X_cat_values = do_parallel_numpy(
-        line_to_2darray, [X_cat_values], [params["nb_channels"]]
+    # #  For cat cols, let's strip spaces
+    # X_cat_values = np.char.strip(train_df[params["cat_cols"]].values.astype("str"))
+    # # Now, let's calculate the number of "channels" needed (max string length)
+    # if "nb_channels" not in params and len(cat_cols) > 0:
+    #     params["nb_channels"] = np.vectorize(len)(X_cat_values).max()
+    # elif "nb_channels" not in params:
+    #     params["nb_channels"] = 0
+    # # Finally, let's transform it into 1d array
+    # X_cat_values = do_parallel_numpy(
+    #     line_to_2darray, [X_cat_values], [params["nb_channels"]]
+    # )
+    # X_cat_values = train_df[params["cat_cols"]].values.astype("str")
+    input_cat_values = train_df[params["cat_cols"]].values.astype("str")
+    X_cat_values = np.zeros(
+        (input_cat_values.shape[0], input_cat_values.shape[1]), dtype="uint"
     )
+
+    if "cat_encoder" not in params:
+        #  Let's calculate fillna for num columns
+        # fillna_values = (
+        #     train_df[params["cat_cols"]].min() - train_df[params["num_cols"]].std() / 10
+        # )
+        params["max_nb"] = -1
+        params["cat_encoder"] = []
+        for i in range(len(params["cat_cols"])):
+            enc = SafeLabelEncoder()
+            enc.fit(input_cat_values[:, i].reshape(-1))
+            # enc_list.append(enc)
+            params["max_nb"] = max(params["max_nb"], len(enc.classes_))
+            params["cat_encoder"].append(enc)
+
+    for i, enc in enumerate(params["cat_encoder"]):
+        # print(enc.transform(input_num_values[:, i].reshape(-1, 1)).reshape(-1, 4).shape)
+        X_cat_values[:, i : i + 1] = (
+            enc.transform(input_cat_values[:, i].reshape(-1))
+            .reshape(-1, 1)
+            .astype("uint")
+        )
 
     X_bool_values = X_bool_values.astype("uint8")
 

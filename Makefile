@@ -51,6 +51,7 @@ start-gpu: build-gpu ## Start docker container
 
 install: build ## Install dependencies
 	$(DOCKER_RUN) 'cd thc-net && poetry install'
+	$(DOCKER_RUN) 'cd thc-net && poetry run jupyter contrib nbextension install --sys-prefix --symlink'
 .PHONY: install
 
 lint: ## Check lint

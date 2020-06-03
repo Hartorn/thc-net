@@ -1004,7 +1004,7 @@ description = "TensorFlow Addons."
 name = "tensorflow-addons"
 optional = false
 python-versions = "*"
-version = "0.9.1"
+version = "0.10.0"
 
 [package.dependencies]
 typeguard = ">=2.7"
@@ -1177,7 +1177,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "86323841d4427eb9d30000a16d379e9da28561319be07aeeedd388fb0e0cd0dc"
+content-hash = "99544cb4dbbfbbc61cc815876088d5f391973a30a9fae5841204d271f9f13070"
 python-versions = ">=3.6.1"
 
 [metadata.files]
@@ -1799,15 +1799,18 @@ tensorflow = [
     {file = "tensorflow-2.2.0-cp38-cp38-win_amd64.whl", hash = "sha256:784ab8217e4b0eb4d121c28430c6cdc2ce56c02634a9720d84fb30598b338b8c"},
 ]
 tensorflow-addons = [
-    {file = "tensorflow_addons-0.9.1-cp35-cp35m-macosx_10_13_x86_64.whl", hash = "sha256:055231ba9ab75c8a70df93b12ef05a00be40bc55aaa9fd0205091f8bef449d6b"},
-    {file = "tensorflow_addons-0.9.1-cp35-cp35m-manylinux2010_x86_64.whl", hash = "sha256:61a97d80a644bae624f968b2fdfce17212455983416942851e5bcc2018620542"},
-    {file = "tensorflow_addons-0.9.1-cp35-cp35m-win_amd64.whl", hash = "sha256:86810cbe54f0675298ffad5ad0c444e92a760d5c3d31da7ad2191e93276f6691"},
-    {file = "tensorflow_addons-0.9.1-cp36-cp36m-macosx_10_13_x86_64.whl", hash = "sha256:d3d7d6202619d267fe41f370fd0fd9e0b6e822ef8c94e0481eff6badb7daf70b"},
-    {file = "tensorflow_addons-0.9.1-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:02b8ce0d68d55b5b599dfce3ad0c1d2f38173afb57ee14dc61c41ea2f43f66d6"},
-    {file = "tensorflow_addons-0.9.1-cp36-cp36m-win_amd64.whl", hash = "sha256:e305f582e47337ddd49384e47abf16f571bfa6c339794a0d15ee24b69debb26d"},
-    {file = "tensorflow_addons-0.9.1-cp37-cp37m-macosx_10_13_x86_64.whl", hash = "sha256:74adb5b07e85cbc83dd0b9e3ca59109b756400729b8d36555842e425fba0b1ad"},
-    {file = "tensorflow_addons-0.9.1-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:ba3f43b088385e12602d1fd260c256d8970366ff4f318f025dcff946328c218b"},
-    {file = "tensorflow_addons-0.9.1-cp37-cp37m-win_amd64.whl", hash = "sha256:ff39ce596a9726f6993b8c0b68d98daf06ca5d38dede5414ac9aab35f185d3e0"},
+    {file = "tensorflow_addons-0.10.0-cp35-cp35m-macosx_10_13_x86_64.whl", hash = "sha256:8dae39a84dcd5eeb0889ebaed86158bd2904c7dde9d5873598712fa12993095c"},
+    {file = "tensorflow_addons-0.10.0-cp35-cp35m-manylinux2010_x86_64.whl", hash = "sha256:8a607414f54248d6bfbfdd2afdc8d1ac2619d5caa37013c0302775b170024524"},
+    {file = "tensorflow_addons-0.10.0-cp35-cp35m-win_amd64.whl", hash = "sha256:0353c10ab3dd332d3c4f9474b0102bc9f277fc0748d9c7a249a77dca8680b881"},
+    {file = "tensorflow_addons-0.10.0-cp36-cp36m-macosx_10_13_x86_64.whl", hash = "sha256:91a3fd625c4550e08c952ca03cc0181362a66a916f8f55631c07a10e8c1d5076"},
+    {file = "tensorflow_addons-0.10.0-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:48e58343daa94f62b31bf5f418b5f1f3f7123c7b373ddc085e1574ea1299263e"},
+    {file = "tensorflow_addons-0.10.0-cp36-cp36m-win_amd64.whl", hash = "sha256:83c452a0ab8a91695837a9380218eca7de0cda0e700ca3c48b5c39b16841f61b"},
+    {file = "tensorflow_addons-0.10.0-cp37-cp37m-macosx_10_13_x86_64.whl", hash = "sha256:c1379b7eacd2ab254b3e5c5041d6e10caa2e373b86451de800c7dab77595e8b7"},
+    {file = "tensorflow_addons-0.10.0-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:c070d28a45ca09d323f2052d83bfab97f9186b6e59191016a8dd5f2547d486a3"},
+    {file = "tensorflow_addons-0.10.0-cp37-cp37m-win_amd64.whl", hash = "sha256:16a4184f42399843ffcad23ca96b9d256a3e0a5f2d3e76c7ceecff5bad6e1c1c"},
+    {file = "tensorflow_addons-0.10.0-cp38-cp38-macosx_10_13_x86_64.whl", hash = "sha256:e185716992fe0d2af6d5826042834b85feda4e4887ad1e29fddf5c9640c38da0"},
+    {file = "tensorflow_addons-0.10.0-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:08034ad2c177038990afc6aef9e7a90546f2872f3a39c4f966d2561346a749ab"},
+    {file = "tensorflow_addons-0.10.0-cp38-cp38-win_amd64.whl", hash = "sha256:d5df84bcd4fbd7006cb2602c96b4a736a46a8667b4179e82a843a159d5802eab"},
 ]
 tensorflow-estimator = [
     {file = "tensorflow_estimator-2.2.0-py2.py3-none-any.whl", hash = "sha256:d09dacdd127f2579cea8d5af21f4a918036b8ae246adc82f26b61f91cc247dc2"},

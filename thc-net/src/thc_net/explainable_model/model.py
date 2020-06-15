@@ -153,13 +153,6 @@ def build_model(
 
 
 def predict(model, input_model):
-    # preds, expl_boo, expl_num, expl_others
-    # model.get_layer("input_bool")
-    # model.get_layer("reshape_num_input")
-    # model.get_layer("reshape_cat_output")
-    # input_cat_dim = len(params["cat_cols"])
-    # input_bool_dim = len(params["bool_cols"])
-    # input_num_dim = len(params["num_cols"])
 
     log_reg_weights = model.get_layer("output").get_weights()[0]
     log_reg_bias = model.get_layer("output").get_weights()[1][0]

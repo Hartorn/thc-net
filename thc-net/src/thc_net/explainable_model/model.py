@@ -3,6 +3,7 @@ import copy
 import numpy as np
 
 from tensorflow.keras import Model, Input
+from tensorflow.keras.activations import sigmoid
 
 from tensorflow.keras.layers import (
     LocallyConnected1D,
@@ -14,7 +15,6 @@ from tensorflow.keras.layers import (
 )
 from tensorflow_addons.activations import mish
 from tensorflow_addons.optimizers import RectifiedAdam, Lookahead
-
 
 DEFAULT_CONV_OPTS = {
     "padding": "valid",
@@ -162,7 +162,7 @@ def predict(model, input_model):
     # input_num_dim = len(params["num_cols"])
 
     log_reg_weights = model.get_layer("output").get_weights()[0]
-    log_reg_bias = model.get_layer("output").get_weights()[1]
+    log_reg_bias = model.get_layer("output").get_weights()[1][0]
 
     outputs = []
     shapes = []
@@ -197,74 +197,25 @@ def predict(model, input_model):
         shapes.append((nb_features, nb_channel))
         consumed += nb_weights
 
-    # if "input_bool" in layers_names:
-    #     layer = model.get_layer("input_bool")
-    #     outputs.append(layer.output)
-    #     shapes.append(layer.output_shape)
-
-    #     consumed += layer.output_shape[-1]
-    #     weights.append(log_reg_weights[:consumed])
-    # if "reshape_num_input" in layers_names:
-    #     layer = model.get_layer("reshape_num_input")
-    #     outputs.append(layer.output)
-    #     shapes.append(layer.output_shape)
-
-    #     nb_weights = layer.output_shape[-2] * layer.output_shape[-1]
-    #     weights.append(log_reg_weights[consumed : consumed + nb_weights])
-    #     consumed += nb_weights
-
-    # if "reshape_cat_output" in layers_names:
-
-    #     layer = model.get_layer("reshape_cat_output")
-    #     outputs.append(layer.output)
-    #     shapes.append(layer.output_shape)
-
-    #     nb_weights = layer.output_shape[-2] * layer.output_shape[-1]
-    #     weights.append(log_reg_weights[consumed : consumed + nb_weights])
-    #     consumed += nb_weights
 
     explainable_model = Model(inputs=[model.input], outputs=[model.output, *outputs],)
-    # features_explain = np.hstack(
-    #     [
-    #         (expl_boo * bool_weight).sum(axis=-1).reshape(-1, 1),
-    #         (expl_num * num_weight).sum(-1),
-    #         (expl_others * others_weight).sum(axis=-1),
-    #     ]
-    # )
-    # features_explain.shape
-    # (expl_boo * bool_weight).sum(axis=-1).reshape(-1, 1),
-    # (expl_num * num_weight).sum(-1),
-    # (expl_others * others_weight).sum(axis=-1),
 
     predictions = explainable_model.predict(input_model)
     probas = predictions[0]
     aggregated_explanation = []
-    print()
+
     for weight_slice, shape_feat, raw_explanation in zip(weights, shapes, predictions[1:]):
         reshaped_expl = raw_explanation.reshape(-1, shape_feat[0], shape_feat[1])
         reshaped_weights = weight_slice.reshape(1, *weight_slice.shape)
-        feature_explaination = (reshaped_expl * reshaped_weights).sum(axis=-1).reshape(-1, shape_feat[0])
-        aggregated_explanation.append(feature_explaination)
+        feature_explanation = (reshaped_expl * reshaped_weights).sum(axis=-1).reshape(-1, shape_feat[0])
+        aggregated_explanation.append(feature_explanation)
 
-    return probas, np.hstack(aggregated_explanation)
-    # bool_weight = model.get_weights()[-2][:1]
-    # bool_weight.shape
-    # num_weight = model.get_weights()[-2][1 : 9 * 16 + 1].reshape(-1, 16)
-    # num_weight.shape
-    # others_weight = model.get_weights()[-2][9 * 16 + 1 :].reshape(-1, 32)
-    # others_weight.shape
-    # features_explain = np.hstack(
-    # [
-    #     (expl_boo * bool_weight).sum(axis=-1).reshape(-1, 1),
-    #     (expl_num * num_weight).sum(-1),
-    #     (expl_others * others_weight).sum(axis=-1),
-    # ]
-    # )
+    aggregated_explanation = np.hstack(aggregated_explanation)
+    
+    results = np.zeros(aggregated_explanation.shape)
+    for idx in range(aggregated_explanation.shape[1]):
+        expla_cpy = np.copy(aggregated_explanation)
+        expla_cpy[:, idx] = 0
+        results[:, idx] = probas.reshape(-1) - sigmoid(expla_cpy.sum(axis=-1) + log_reg_bias).numpy().reshape(-1)
 
-    # features_explain.shape
-    # model.layers[-1].get_weights()[0]
-    # new_model = Model(
-    #     inputs=[model.inputs],
-    #     outputs=[model.output, model.layers[-2].output, model.layers[-3].output],
-    # )
-    # return
+    return probas, aggregated_explanation, results

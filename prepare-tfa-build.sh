@@ -44,11 +44,11 @@ cd addons
 export TF_NEED_CUDA="1"
 
 # Set these if the below defaults are different on your system
-export TF_CUDA_VERSION="10.1"
+export TF_CUDA_VERSION="10.2"
 export TF_CUDNN_VERSION="7"
 export CUDA_TOOLKIT_PATH="/usr/local/cuda"
 export CUDNN_INSTALL_PATH="/usr/lib/x86_64-linux-gnu"
-
+export TMP="/tmp"
 # This script links project with TensorFlow dependency
 poetry run python ./configure.py
 

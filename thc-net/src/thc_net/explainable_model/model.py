@@ -173,7 +173,6 @@ def predict(model, input_model):
         input_shape = layer.input_shape
         if isinstance(input_shape, list):
             input_shape = input_shape[0]
-        print(input_shape)
 
         nb_channel = (
             input_shape[-1]
@@ -211,4 +210,56 @@ def predict(model, input_model):
         expla_cpy[:, idx] = 0
         results[:, idx] = probas.reshape(-1) - sigmoid(expla_cpy.sum(axis=-1) + log_reg_bias).numpy().reshape(-1)
 
-    return probas, aggregated_explanation, results
+    return probas, results
+
+
+def encode(model, input_model):
+
+    log_reg_weights = model.get_layer("output").get_weights()[0]
+    # log_reg_bias = model.get_layer("output").get_weights()[1][0]
+
+    outputs = []
+    shapes = []
+    weights = []
+
+    layers_names = [layer.name for layer in model.layers]
+
+    consumed = 0
+
+    for name in ["input_bool", "reshape_num_output", "reshape_cat_output"]:
+        if name not in layers_names:
+            continue
+        layer = model.get_layer(name)
+        outputs.append(layer.output)
+        input_shape = layer.input_shape
+        if isinstance(input_shape, list):
+            input_shape = input_shape[0]
+
+        nb_channel = (
+            input_shape[-1]
+            if len(input_shape) > 2
+            else 1
+        )
+        nb_features = (
+            input_shape[-2]
+            if len(input_shape) > 2
+            else input_shape[-1]
+        )
+        nb_weights = nb_channel * nb_features
+        weights.append(log_reg_weights[consumed : consumed + nb_weights].reshape(nb_features, nb_channel))
+        shapes.append((nb_features, nb_channel))
+        consumed += nb_weights
+
+
+    explainable_model = Model(inputs=[model.input], outputs=[model.output, *outputs],)
+
+    predictions = explainable_model.predict(input_model)
+    probas = predictions[0]
+    aggregated_explanation = []
+
+    for shape_feat, raw_explanation in zip(shapes, predictions[1:]):
+        aggregated_explanation.append(raw_explanation.reshape(-1, shape_feat[0] * shape_feat[1]))
+
+    aggregated_explanation = np.hstack(aggregated_explanation)
+
+    return probas, aggregated_explanation

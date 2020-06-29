@@ -20,7 +20,7 @@ RUN curl https://dl.google.com/go/go1.13.10.linux-amd64.tar.gz -o go.tar.gz \
 && mv go /usr/local
 
 ENV GOROOT /usr/local/go
-ENV PATH $GOPATH/bin:$GOROOT/bin:$PATH
+ENV PATH $PATH:$GOPATH/bin:$GOROOT/bin:/usr/sbin:/usr/local/sbin:/sbin
 
 # Install Bazelisk as Bazel
 RUN go get github.com/bazelbuild/bazelisk && ln -s /root/go/bin/bazelisk /usr/local/bin/bazel

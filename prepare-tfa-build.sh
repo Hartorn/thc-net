@@ -40,7 +40,9 @@ TENSORFLOW_ADDONS_VERSION="v0.10.0"
 
 git clone https://github.com/tensorflow/addons.git -b ${TENSORFLOW_ADDONS_VERSION} --depth 1
 cd addons
+# export PATH=${PATH}:/usr/sbin:/usr/local/sbin:/sbin
 
+apt update && apt install -y rsync --no-install-recommends
 export TF_NEED_CUDA="1"
 
 # Set these if the below defaults are different on your system
@@ -50,12 +52,12 @@ export CUDA_TOOLKIT_PATH="/usr/local/cuda"
 export CUDNN_INSTALL_PATH="/usr/lib/x86_64-linux-gnu"
 export TMP="/tmp"
 # This script links project with TensorFlow dependency
-poetry run python ./configure.py
+python ./configure.py
 
 bazel build --enable_runfiles build_pip_pkg
 bazel-bin/build_pip_pkg artifacts
 
-poetry run pip install artifacts/tensorflow_addons-*.whl
+pip install artifacts/tensorflow_addons-*.whl
 
 #    42  apt install rsync --no-install-recommends
 #    43  exit

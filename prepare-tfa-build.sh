@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-TENSORFLOW_ADDONS_VERSION="v0.10.0"
+TENSORFLOW_ADDONS_VERSION="v0.11.2"
 # This is already done in docker image
 # # Install Go (for TF build)
 # RUN curl https://dl.google.com/go/go1.13.10.linux-amd64.tar.gz -o go.tar.gz \

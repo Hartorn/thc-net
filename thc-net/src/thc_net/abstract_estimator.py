@@ -128,11 +128,11 @@ class AbstractThcNetEstimator(BaseEstimator):
             )
 
         prepared_inputs = self.prepare_input_(X)
-        val_data = []
+        val_data = ()
 
         if X_valid is not None and y_valid is not None:
             prepared_val_inputs = self.prepare_input_(X_valid)
-            val_data = [prepared_val_inputs, y_valid]
+            val_data = (prepared_val_inputs, y_valid)
 
         all_cbs = [*callbacks]
         if self.patience is not None:

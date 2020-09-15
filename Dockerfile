@@ -1,7 +1,8 @@
-FROM python:3.7-slim-buster@sha256:dc7110e9b6da8c75b703d17ff4d276ae65d7e3d21ab24847779cb442130710e1
-RUN apt update && apt install curl make git libopenblas-base libgomp1 graphviz gcc g++ -y
+FROM bazire/python:3.7-cpu
+
+RUN apt update && apt install curl make git -y
 RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
-ENV SHELL /bin/bash -l
+SHELL ["/bin/bash", "-lc"]
 
 ENV POETRY_CACHE /work/.cache/poetry
 ENV PIP_CACHE_DIR /work/.cache/pip
@@ -10,6 +11,18 @@ ENV JUPYTER_CONFIG_DIR /work/.cache/jupyter/config
 
 RUN $HOME/.poetry/bin/poetry config virtualenvs.path $POETRY_CACHE
 
-ENV PATH /root/.poetry/bin:/bin:/usr/local/bin:/usr/bin
+ENV PATH ${PATH}:/root/.poetry/bin:/bin:/usr/local/bin:/usr/bin:/usr/sbin:/usr/local/sbin:/sbin
+
+# Install Go (for TF build)
+RUN curl https://dl.google.com/go/go1.13.10.linux-amd64.tar.gz -o go.tar.gz \
+&& tar -xvf go.tar.gz \
+&& rm -rf go.tar.gz \
+&& mv go /usr/local
+
+ENV GOROOT /usr/local/go
+ENV PATH $PATH:$GOPATH/bin:$GOROOT/bin
+
+# Install Bazelisk as Bazel
+RUN go get github.com/bazelbuild/bazelisk && ln -s /root/go/bin/bazelisk /usr/local/bin/bazel
 
 CMD ["bash", "-l"]

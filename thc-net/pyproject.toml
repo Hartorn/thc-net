@@ -1,23 +1,26 @@
 [tool.poetry]
 name = "thc-net"
-version = "0.1.1"
+version = "0.2.0"
 description = ""
 authors = ["Hartorn <hartorn.github@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.6.1"
-tensorflow = "^2.1.0"
-tensorflow-addons = "^0.8.3"
-scikit-learn = "^0.22.2"
+tensorflow = "2.2.0"
+tensorflow-addons = "0.11.2"
+scikit-learn = "0.23.1"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.3"
-notebook = "^6.0.3"
-ipywidgets = "^7.5.1"
-wget = "^3.2"
-matplotlib = "^3.2"
-numpy = "^1.18" 
-pandas = "^1.0" 
+pytest = "5.4.3"
+notebook = "6.0.3"
+ipywidgets = "7.5.1"
+requests = "2.23.0"
+matplotlib = "3.2.1"
+numpy = "1.18.5" 
+pandas = "1.0.4" 
+nb-black = "1.0.7"
+black = "19.10b0"
+jupyter_contrib_nbextensions = "0.5.1"
 
 [build-system]
 requires = ["poetry>=1.0"]

@@ -64,7 +64,7 @@ def build_optimizer():
 
 
 def build_model(
-    params, lconv_dim=[], lconv_num_dim=[], activation=None, optimizer=None
+    params, lconv_dim=[], lconv_num_dim=[], activation=None, optimizer=None, emb_size=16, activation_num_first_layer=None
 ):
     if optimizer is None:
         optimizer = build_optimizer()
@@ -90,19 +90,19 @@ def build_model(
 
     # Handling numeric
     if input_num_dim > 0:
-        input_num_layer = Input(shape=(input_num_dim * 3,), name="input_num")
+        input_num_layer = Input(shape=(input_num_dim,), name="input_num")  # *3
         inputs.append(input_num_layer)
         x_num_layer = input_num_layer
 
         if len(lconv_num_dim) != 0 and input_num_dim > 0:
-            # x_num_layer = Reshape((input_num_dim, 1), name="reshape_num_input")(
-            #     x_num_layer
-            # )
-            # print(input_num_dim)
-            # print(int(input_num_dim/2))
-            x_num_layer = Reshape((input_num_dim, 3), name="reshape_num_input")(
+            x_num_layer = Reshape((input_num_dim, 1), name="reshape_num_input")(
                 x_num_layer
             )
+            # print(input_num_dim)
+            # print(int(input_num_dim/2))
+            # x_num_layer = Reshape((input_num_dim, 3), name="reshape_num_input")(
+            #     x_num_layer
+            # )
 
         x_num_layer = add_local_conv_block(
             x_num_layer,
@@ -110,7 +110,7 @@ def build_model(
             "block_num",
             activation,
             use_bn=False,
-            activation_first_layer=None,  # "tanh",
+            activation_first_layer=activation_num_first_layer,  # "tanh",
             options=None,
         )
 
@@ -128,7 +128,7 @@ def build_model(
 
         x_layer = Embedding(
             params["max_nb"] + 1,
-            16, #int(min(np.log2(params["max_nb"] + 1), 50)),
+            emb_size, #int(min(np.log2(params["max_nb"] + 1), 50)),
             #int(min((params["max_nb"] + 1) / 2, 50)),
             name="large_emb",
         )(input_cat_layer)

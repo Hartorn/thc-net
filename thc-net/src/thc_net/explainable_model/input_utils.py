@@ -65,12 +65,14 @@ def preproc_dataset(train_df, target=None, ids=None, params=None):
         bool_cols = list(set(bool_cols.tolist()) - set(to_ignore))
         params["bool_cols"] = bool_cols
     if "num_cols" not in params:
+        large_int = train_df[train_df.columns[(train_df.dtypes != "object")]].max() > 1e14
         num_cols = list(
             set(
                 train_df.columns[
-                    (n_unique > 2) & ((n_unique / train_df.shape[0]) >  0.05) & (train_df.dtypes != "object")
+                   (n_unique > 2) & ((n_unique / train_df.shape[0]) >  0.05) & (train_df.dtypes != "object")
                 ].tolist()
             )
+            - set(large_int.index[large_int.values].tolist())
             - set(to_ignore)
         )
         params["num_cols"] = num_cols
@@ -88,7 +90,7 @@ def preproc_dataset(train_df, target=None, ids=None, params=None):
     # Let's handle numeric columns
     input_num_values = train_df[params["num_cols"]].values
     X_num_values = np.zeros(
-        (input_num_values.shape[0], 3 * input_num_values.shape[1]), dtype="float"
+        (input_num_values.shape[0], input_num_values.shape[1]), dtype="float" #  3 * 
     )
 
     if "num_encoder" not in params:
@@ -116,16 +118,16 @@ def preproc_dataset(train_df, target=None, ids=None, params=None):
                             ]
                         ),
                     ),
-                    ("indicator", MissingIndicator(features="all")),
-                    (
-                        "quantile",
-                        Pipeline(
-                            [
-                                ("fillna", SimpleImputer(strategy="median"),),
-                                ("quantile", QuantileTransformer()),
-                            ]
-                        ),
-                    ),
+                    # ("indicator", MissingIndicator(features="all")),
+                    # (
+                    #     "quantile",
+                    #     Pipeline(
+                    #         [
+                    #             ("fillna", SimpleImputer(strategy="median"),),
+                    #             ("quantile", QuantileTransformer()),
+                    #         ]
+                    #     ),
+                    # ),
                     # (
                     #     "bins",
                     #     Pipeline(
@@ -145,9 +147,9 @@ def preproc_dataset(train_df, target=None, ids=None, params=None):
 
     for i, enc in enumerate(params["num_encoder"]):
         # print(enc.transform(input_num_values[:, i].reshape(-1, 1)).reshape(-1, 4).shape)
-        X_num_values[:, 3 * i : 3 * (i + 1)] = (
+        X_num_values[:, i :  (i + 1)] = (  #3  *
             enc.transform(input_num_values[:, i].reshape(-1, 1))
-            .reshape(-1, 3)
+            # .reshape(-1, 3)
             .astype("float")
         )
 

@@ -19,7 +19,7 @@ matplotlib = "3.2.1"
 numpy = "1.18.5" 
 pandas = "1.0.4" 
 nb-black = "1.0.7"
-black = "19.10b0"
+black = "24.10.0"
 jupyter_contrib_nbextensions = "0.5.1"
 
 [build-system]

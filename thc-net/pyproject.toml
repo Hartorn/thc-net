@@ -23,5 +23,5 @@ black = "19.10b0"
 jupyter_contrib_nbextensions = "0.5.1"
 
 [build-system]
-requires = ["poetry>=1.0"]
+requires = ["poetry==1.8.4"]
 build-backend = "poetry.masonry.api"
